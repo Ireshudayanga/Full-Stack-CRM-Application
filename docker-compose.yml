@@ -9,8 +9,50 @@ services:
     volumes:
       - mongodb_data:/data/db
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=password123
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    networks:
+      - crm-network
+
+  backend:
+    build:
+      context: ./crm_back
+    container_name: crm-backend
+    command: npm run dev
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./crm_back:/usr/src/app
+      - /usr/src/app/node_modules
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+    networks:
+      - crm-network
+
+  frontend:
+    build:
+      context: ./crm_front
+    container_name: crm-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./crm_front:/app
+      - /app/node_modules
+      - /app/.next
+    env_file:
+      - .env
+    environment:
+      - PORT=3000
+    depends_on:
+      - backend
+    networks:
+      - crm-network
 
 volumes:
   mongodb_data:
+
+networks:
+  crm-network:
+    driver: bridge
