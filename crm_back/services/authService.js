@@ -15,7 +15,7 @@ const login = async (email, password) => {
 
   const token = jwt.sign(
     { id: user._id, email: user.email },
-    process.env.JWT_SECRET || 'supersecretcrmkey123',
+    process.env.JWT_SECRET,
     { expiresIn: '1d' }
   );
 
