@@ -11,6 +11,48 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=password123
+    networks:
+      - crm-network
+
+  backend:
+    build:
+      context: ./crm_back
+    container_name: crm-backend
+    command: npm run dev
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./crm_back:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://admin:password123@mongodb:27017/crm_db?authSource=admin
+      - JWT_SECRET=supersecretcrmkey123
+    depends_on:
+      - mongodb
+    networks:
+      - crm-network
+
+  frontend:
+    build:
+      context: ./crm_front
+    container_name: crm-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./crm_front:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5001/api
+    depends_on:
+      - backend
+    networks:
+      - crm-network
 
 volumes:
   mongodb_data:
+
+networks:
+  crm-network:
+    driver: bridge

@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const mongoose = require('mongoose');
 const connectDB = require('./config/db');
+
+const authRoutes = require('./routes/authRoutes');
+const leadRoutes = require('./routes/leadRoutes');
 
 dotenv.config();
 
@@ -15,12 +17,11 @@ app.use(express.json());
 // Database Connection
 connectDB();
 
-app.get('/', (req, res) => {
-  res.send('CRM API is running...');
-});
+app.use('/api/auth', authRoutes);
+app.use('/api/leads', leadRoutes);
 
 app.get('/', (req, res) => {
-  res.send('Hello from the CRM backend!');
+  res.send('CRM API is running...');
 });
 
 app.listen(PORT, () => {
