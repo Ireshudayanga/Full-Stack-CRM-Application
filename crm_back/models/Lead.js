@@ -17,7 +17,12 @@ const LeadSchema = new mongoose.Schema({
     enum: ['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Won', 'Lost'],
     default: 'New'
   },
-  dealValue: { type: Number, required: true, default: 0 }
+  dealValue: { type: Number, required: true, default: 0 },
+  notes: [{
+    content: { type: String, required: true },
+    createdBy: { type: String, required: true },
+    date: { type: Date, default: Date.now }
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Lead', LeadSchema);

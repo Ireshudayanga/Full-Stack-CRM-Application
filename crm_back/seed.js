@@ -9,21 +9,24 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://admin:password123@localhost
 
 const seedAdmin = async () => {
   try {
-    const existingUser = await User.findOne({ email: 'admin@example.com' });
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    const existingUser = await User.findOne({ email: adminEmail });
     if (existingUser) {
       console.log('Admin user already exists');
       process.exit();
     }
 
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash('password123', salt);
+    const hashedPassword = await bcrypt.hash(adminPassword, salt);
 
     await User.create({
-      email: 'admin@example.com',
+      email: adminEmail,
       password: hashedPassword
     });
 
-    console.log('Admin user seeded successfully: admin@example.com / password123');
+    console.log(`Admin user seeded successfully: ${adminEmail}`);
     process.exit();
   } catch (error) {
     console.error('Error seeding admin user:', error);

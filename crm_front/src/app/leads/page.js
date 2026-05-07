@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -9,10 +10,15 @@ export default function Leads() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentLead, setCurrentLead] = useState(null);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [sourceFilter, setSourceFilter] = useState('All');
+  const [salespersonFilter, setSalespersonFilter] = useState('All');
+
   const fetchLeads = async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/leads`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -31,7 +37,7 @@ export default function Leads() {
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this lead?')) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/leads/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -62,6 +68,19 @@ export default function Leads() {
     'Lost': 'bg-red-50 text-red-700 border-red-200'
   };
 
+  const filteredLeads = leads.filter(lead => {
+    const matchesSearch = 
+      lead.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      lead.companyName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      lead.email.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'All' || lead.status === statusFilter;
+    const matchesSource = sourceFilter === 'All' || lead.source === sourceFilter;
+    const matchesSalesperson = salespersonFilter === 'All' || lead.salesperson === salespersonFilter;
+    
+    return matchesSearch && matchesStatus && matchesSource && matchesSalesperson;
+  });
+
   return (
     <>
       <div className="max-w-7xl mx-auto animation-fade-in">
@@ -80,6 +99,49 @@ export default function Leads() {
         </button>
       </div>
 
+      <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-4 items-center">
+        <div className="flex-1 min-w-[200px]">
+          <input 
+            type="text" 
+            placeholder="Search by name, company, or email..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-200 text-slate-800 p-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
+          />
+        </div>
+        <select 
+          value={statusFilter} 
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="bg-slate-50 border border-slate-200 text-slate-800 p-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
+          <option value="All">All Statuses</option>
+          <option value="New">New</option>
+          <option value="Contacted">Contacted</option>
+          <option value="Qualified">Qualified</option>
+          <option value="Proposal Sent">Proposal Sent</option>
+          <option value="Won">Won</option>
+          <option value="Lost">Lost</option>
+        </select>
+        <select 
+          value={sourceFilter} 
+          onChange={(e) => setSourceFilter(e.target.value)}
+          className="bg-slate-50 border border-slate-200 text-slate-800 p-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
+          <option value="All">All Sources</option>
+          <option value="Website">Website</option>
+          <option value="LinkedIn">LinkedIn</option>
+          <option value="Referral">Referral</option>
+          <option value="Other">Other</option>
+        </select>
+        <select 
+          value={salespersonFilter} 
+          onChange={(e) => setSalespersonFilter(e.target.value)}
+          className="bg-slate-50 border border-slate-200 text-slate-800 p-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
+          <option value="All">All Salespeople</option>
+          {[...new Set(leads.map(l => l.salesperson))].map(sp => (
+            <option key={sp} value={sp}>{sp}</option>
+          ))}
+        </select>
+      </div>
+
       <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -94,7 +156,7 @@ export default function Leads() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {leads.map(lead => (
+              {filteredLeads.map(lead => (
                 <tr key={lead._id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="p-5 pl-6">
                     <div className="font-bold text-slate-900">{lead.name}</div>
@@ -145,7 +207,7 @@ export default function Leads() {
                   </td>
                 </tr>
               ))}
-              {leads.length === 0 && (
+              {filteredLeads.length === 0 && (
                 <tr>
                   <td colSpan="6" className="p-12 text-center">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-4">

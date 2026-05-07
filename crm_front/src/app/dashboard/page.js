@@ -17,7 +17,7 @@ export default function Dashboard() {
 
     const fetchAnalytics = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/leads/analytics`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/analytics`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -49,7 +49,7 @@ export default function Dashboard() {
         <p className="text-slate-500 mt-1">Welcome back, <span className="font-medium text-slate-700">{user?.email}</span></p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
           <h3 className="text-slate-500 text-sm font-semibold mb-2 relative z-10">Total Leads</h3>
@@ -72,6 +72,12 @@ export default function Dashboard() {
           <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
           <h3 className="text-slate-500 text-sm font-semibold mb-2 relative z-10">Won Leads</h3>
           <p className="text-4xl font-extrabold text-slate-800 relative z-10">{analytics.won}</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-red-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+          <h3 className="text-slate-500 text-sm font-semibold mb-2 relative z-10">Lost Leads</h3>
+          <p className="text-4xl font-extrabold text-slate-800 relative z-10">{analytics.lost}</p>
         </div>
       </div>
 

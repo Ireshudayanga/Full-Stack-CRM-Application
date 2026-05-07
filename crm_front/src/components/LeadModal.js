@@ -1,9 +1,10 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 export default function LeadModal({ lead, onClose, onSave }) {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     companyName: '',
@@ -12,8 +13,10 @@ export default function LeadModal({ lead, onClose, onSave }) {
     source: 'Website',
     salesperson: '',
     status: 'New',
-    dealValue: 0
+    dealValue: 0,
+    notes: []
   });
+  const [newNote, setNewNote] = useState('');
 
   useEffect(() => {
     if (lead) {
@@ -25,7 +28,8 @@ export default function LeadModal({ lead, onClose, onSave }) {
         source: lead.source,
         salesperson: lead.salesperson,
         status: lead.status,
-        dealValue: lead.dealValue
+        dealValue: lead.dealValue,
+        notes: lead.notes || []
       });
     }
   }, [lead]);
@@ -41,10 +45,19 @@ export default function LeadModal({ lead, onClose, onSave }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = lead 
-      ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/leads/${lead._id}`
-      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/leads`;
+      ? `${process.env.NEXT_PUBLIC_API_URL}/leads/${lead._id}`
+      : `${process.env.NEXT_PUBLIC_API_URL}/leads`;
     
     const method = lead ? 'PUT' : 'POST';
+
+    const payload = { ...formData };
+    if (newNote.trim() !== '') {
+      payload.notes = [...payload.notes, {
+        content: newNote.trim(),
+        createdBy: user?.email || 'Unknown',
+        date: new Date()
+      }];
+    }
 
     try {
       const res = await fetch(url, {
@@ -53,7 +66,7 @@ export default function LeadModal({ lead, onClose, onSave }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         onSave();
@@ -142,6 +155,25 @@ export default function LeadModal({ lead, onClose, onSave }) {
               <input type="number" name="dealValue" value={formData.dealValue} onChange={handleChange} required min="0" 
                 className="w-full bg-slate-50 border border-slate-200 text-slate-800 p-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400" />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Internal Notes</label>
+            {formData.notes && formData.notes.length > 0 && (
+              <div className="mb-3 max-h-32 overflow-y-auto space-y-2 pr-2">
+                {formData.notes.map((note, idx) => (
+                  <div key={idx} className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
+                    <p className="text-sm text-slate-800">{note.content}</p>
+                    <div className="flex justify-between items-center mt-2 text-[10px] text-slate-500 font-medium uppercase tracking-wider">
+                      <span>{note.createdBy}</span>
+                      <span>{new Date(note.date).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <textarea name="newNote" value={newNote} onChange={(e) => setNewNote(e.target.value)} rows="2"
+              className="w-full bg-slate-50 border border-slate-200 text-slate-800 p-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400 resize-y" placeholder="Type a new note here..." />
           </div>
 
           <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-slate-100">
